@@ -1,6 +1,41 @@
 # Release Notes
 
-## XMLUnit for Java 2.6.5 - /not released, yet/
+## XMLUnit for Java 2.8.0 - /not released, yet/
+
+* changed optional JAXB dependency to use Jakarta XML Binding API
+  PR [#186](https://github.com/xmlunit/xmlunit/pull/186)
+  by [@endrejeges](https://github.com/endrejeges)
+
+## XMLUnit for Java 2.7.0 - /Released 2020-05-12/
+
+This version contains a backwards incompatible change to the
+`PlaceholderHandler` interface that is part of the experimental
+placeholders module: The `evaluate` method now receives a variable
+number of string arguments in addition to the textual content of the
+element/attribute. This allows placeholders like
+`${xmlunit.matchesRegex(some\s*regex)}`.
+
+* the AssertJ tests now pass on non-English locales as well
+  Issue [#180](https://github.com/xmlunit/xmlunit/pull/180)
+
+* added a workaround for a binary incompatible change in AssertJ that
+  caused xmlunit-assertj to be incompatible with AssertJ 3.15.0
+  Issue [#181](https://github.com/xmlunit/xmlunit/issues/181)
+
+* added a new `${xmlunit.matchesRegex(regex)}` placeholder
+  PR [#178](https://github.com/xmlunit/xmlunit/issues/178) by
+  [@Jazzyekim](https://github.com/Jazzyekim).
+
+* add a new `${xmlunit.isDateTime}` placeholder
+  inspired by [#xmlunit.net/31](https://github.com/xmlunit/xmlunit.net/pull/31) and
+  [#xmlunit.net/32](https://github.com/xmlunit/xmlunit.net/pull/32) by
+  [MilkyWare](https://github.com/MilkyWare)
+  Issue [#174](https://github.com/xmlunit/xmlunit/issues/174)
+
+* avoid unnecessary creation of `DocumentBuilderFactory` in
+  `DOMDifferenceEngine` when a custom factory has been provided to
+  `DiffBuilder`.
+  Issue [#182](https://github.com/xmlunit/xmlunit/issues/182)
 
 ## XMLUnit for Java 2.6.4 - /Released 2020-03-08/
 

@@ -20,7 +20,9 @@ import org.xmlunit.diff.*;
 
 import javax.xml.namespace.QName;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
 
 /**
@@ -353,4 +355,121 @@ public class PlaceholderDifferenceEvaluatorTest {
 
         assertFalse(diff.hasDifferences());
     }
+
+    @Test
+    public void hasMatchesRegexPlaceholder_Attribute_Matches() {
+        String control = "<elem1 attr='${xmlunit.matchesRegex(^\\d+$)}'>qwert</elem1>";
+        String test = "<elem1 attr='023'>qwert</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
+    @Test
+    public void hasMatchesRegexPlaceholder_Attribute_NotMatches() {
+        String control = "<elem1 attr='${xmlunit.matchesRegex(^\\d+$)}'>qwert</elem1>";
+        String test = "<elem1 attr='023asd'>qwert</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertTrue(diff.hasDifferences());
+    }
+
+    @Test
+    public void hasMatchesRegexPlaceholder_Element_Matches() {
+        String control = "<elem1>${xmlunit.matchesRegex(^\\d+$)}</elem1>";
+        String test = "<elem1>023</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
+    @Test
+    public void hasMatchesRegexPlaceholder_Element_NotMatches() {
+        String control = "<elem1>${xmlunit.matchesRegex(^\\d+$)}</elem1>";
+        String test = "<elem1>23abc</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertTrue(diff.hasDifferences());
+    }
+
+    @Test
+    public void hasMatchesRegexPlaceholder_Element_Exception_MalformedRegex() {
+        String control = "<elem1>${xmlunit.matchesRegex[^(\\d+$]}</elem1>";
+        String test = "<elem1>23abc</elem1>";
+        DiffBuilder diffBuilder = DiffBuilder.compare(control).withTest(test)
+                .withDifferenceEvaluator(new PlaceholderDifferenceEvaluator(null, null, Pattern.quote("["), Pattern.quote("]"), null));
+
+        try {
+            diffBuilder.build();
+            fail();
+        } catch (XMLUnitException e) {
+            assertThat(e.getCause().getMessage(), containsString("Unclosed group near index"));
+        }
+    }
+
+    @Test
+    public void hasMalformedPlaceholder_Attribute() {
+        String control = "<elem1 attr='${xmlunit.,}'>qwert</elem1>";
+        String test = "<elem1 attr='023'>qwert</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertTrue(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Attribute_NotDateTime() {
+        String control = "<elem1 attr='${xmlunit.isDateTime}'/>";
+        String test = "<elem1 attr='abc'/>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertTrue(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Attribute_IsDateTime() {
+        String control = "<elem1 attr='${xmlunit.isDateTime}'/>";
+        String test = "<elem1 attr='2020-01-01 15:00:00Z'/>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Attribute_IsDateTime_CustomFormat() {
+        String control = "<elem1 attr='${xmlunit.isDateTime(dd.MM.yyyy)}'/>";
+        String test = "<elem1 attr='05.09.2020'/>";
+        Diff diff = DiffBuilder.compare(control).withTest(test)
+            .withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Element_NotDateTime() {
+        String control = "<elem1>${xmlunit.isDateTime}</elem1>";
+        String test = "<elem1>abc</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertTrue(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Element_IsDateTime() {
+        String control = "<elem1>${xmlunit.isDateTime}</elem1>";
+        String test = "<elem1>2020-01-01 15:00:00Z</elem1>";
+        Diff diff = PlaceholderSupport.withPlaceholderSupport(DiffBuilder.compare(control).withTest(test)).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
+    @Test
+    public void isDateTimePlaceholder_Element_IsDateTime_CustomFormat() {
+        String control = "<elem1>${xmlunit.isDateTime(dd.MM.yyyy)}</elem1>";
+        String test = "<elem1>05.09.2020</elem1>";
+        Diff diff = DiffBuilder.compare(control).withTest(test)
+            .withDifferenceEvaluator(new PlaceholderDifferenceEvaluator()).build();
+
+        assertFalse(diff.hasDifferences());
+    }
+
 }
